@@ -1,0 +1,26 @@
+[project]
+name = "wordontwords"
+version = "0.1.0"
+description = "A Hamilton DAG that ingests used Wordle words from fiveforks.com (mirrors eacaps/wordle-words)."
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "MIT" }
+dependencies = [
+    "sf-hamilton>=1.70",
+    "requests>=2.31",
+    "beautifulsoup4>=4.12",
+    "lxml>=5.0",
+]
+
+[project.optional-dependencies]
+viz = ["sf-hamilton[visualization]"]
+
+[project.scripts]
+wordontwords = "wordontwords.run:main"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
