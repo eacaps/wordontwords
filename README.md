@@ -29,28 +29,38 @@ reference_date ──> last_updated ──────────────�
 
 ## Install
 
+This project uses [uv](https://docs.astral.sh/uv/) for dependency and
+environment management. [Install uv](https://docs.astral.sh/uv/getting-started/installation/)
+first, then:
+
 ```bash
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -e .
+# create .venv and install everything from uv.lock (incl. this package)
+uv sync
+
 # optional, for DAG visualization (requires graphviz on your system):
-# pip install -e ".[viz]"
+# uv sync --extra viz
+```
+
+For a reproducible, lockfile-is-law install (e.g. in CI), use:
+
+```bash
+uv sync --locked
 ```
 
 ## Run
 
 ```bash
 # writes ./dist/word-list.json using the live source
-python -m wordontwords.run
+uv run wordontwords
 
-# or via the installed console script
-wordontwords
+# or invoke the module directly
+uv run python -m wordontwords.run
 ```
 
 Useful flags:
 
 ```bash
-python -m wordontwords.run \
+uv run wordontwords \
   --source-url https://www.fiveforks.com/wordle/block/ \
   --output out/word-list.json \
   --reference-date 2026-10-14 \
@@ -66,6 +76,9 @@ python -m wordontwords.run \
 | `--visualize` | Also render the DAG to an image (needs the `viz` extra + graphviz). |
 
 ## Using the DAG from Python
+
+Run this inside the project environment (e.g. `uv run python script.py`, or
+after `source .venv/bin/activate`):
 
 ```python
 from hamilton import driver
