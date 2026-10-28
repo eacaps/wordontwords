@@ -1,0 +1,57 @@
+# Automated versioning + tagging for wordontwords via python-semantic-release.
+#
+# How it works: on every push to main, PSR reads the Conventional Commit
+# messages since the last tag, decides the next SemVer bump, stamps the new
+# version into pyproject.toml, updates the changelog, commits, tags (vX.Y.Z),
+# pushes, and creates a GitHub release. If no commit warrants a release
+# (e.g. only docs/chore commits), it does nothing.
+#
+# Commit message conventions that drive the bump:
+#   fix: ...      -> patch (0.1.0 -> 0.1.1)
+#   feat: ...     -> minor (0.1.0 -> 0.2.0)
+#   feat!: ...    -> major (0.1.0 -> 1.0.0)   (or a "BREAKING CHANGE:" footer)
+#
+# Once a release exists, pin it in eacaps/wordle-words' update-word-list.yml:
+#   uvx --from git+https://github.com/eacaps/wordontwords@v0.2.0 wordontwords ...
+name: Release
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch: {}   # allow a manual release from the Actions tab
+
+# Least privilege by default; the release job elevates below.
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write      # needed to push the bump commit, tag, and release
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ github.ref_name }}
+          # PSR v10.5+ auto-unshallows, but full history is cheap here and
+          # avoids any surprises when evaluating commit history.
+          fetch-depth: 0
+
+      - name: Force branch to the workflow SHA
+        # Guards against releasing changes pushed after this run started.
+        run: git reset --hard ${{ github.sha }}
+
+      - name: Python Semantic Release
+        id: release
+        uses: python-semantic-release/python-semantic-release@v10.6.1
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          git_committer_name: "github-actions[bot]"
+          git_committer_email: "github-actions[bot]@users.noreply.github.com"
